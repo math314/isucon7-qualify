@@ -1,0 +1,60 @@
+version: '3'
+services:
+  bench:
+    build:
+     context: ./bench
+     args:
+        GIT_URL: https://github.com/math314/isucon7-qualify
+    image: isucon7-qualifier-bench
+    depends_on:
+      - web
+    networks:
+      - frontend
+  web:
+    build:
+      context: ./web
+      args:
+        GIT_URL: https://github.com/math314/isucon7-qualify
+    image: isucon7-qualifier-web:nginx
+    networks:
+      - frontend
+      - backend
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+  app:
+    build:
+      context: ./app/go
+      args:
+        GO_SRC: app/go
+    image: isucon7-qualifier-app:go
+    networks:
+      - backend
+    depends_on:
+       - db
+    ports:
+      - "5000"
+    environment:
+      ISUBATA_DB_USER: isucon
+      ISUBATA_DB_PASSWORD: isucon
+      ISUBATA_DB_HOST: db
+  db:
+    build:
+      context: ./db
+      args:
+        GIT_URL: https://github.com/math314/isucon7-qualify
+    image: isucon7-qualifier-db
+    ports:
+      - "3306"
+    networks:
+      - backend
+    command: ["--character-set-server=utf8mb4"]
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      #MYSQL_DATABASE: isubata
+      #MYSQL_USER: isucon
+      #MYSQL_PASSWORD: isucon
+networks:
+  frontend:
+  backend:
